@@ -1,13 +1,11 @@
 import torch
 import torch.nn as nn
-import torch.nn.functional as F
 
 from .conv import autopad
-from typing import Tuple
+
 
 class C2PSA(nn.Module):
-    """
-    C2PSA module with attention mechanism for enhanced feature extraction and processing.
+    """C2PSA module with attention mechanism for enhanced feature extraction and processing.
 
     This module implements a convolutional block with attention mechanisms to enhance feature extraction and processing
     capabilities. It includes a series of PSABlock modules for self-attention and feed-forward operations.
@@ -21,18 +19,17 @@ class C2PSA(nn.Module):
     Methods:
         forward: Performs a forward pass through the C2PSA module, applying attention and feed-forward operations.
 
-    Notes:
-        This module essentially is the same as PSA module, but refactored to allow stacking more PSABlock modules.
-
     Examples:
         >>> c2psa = C2PSA(c1=256, c2=256, n=3, e=0.5)
         >>> input_tensor = torch.randn(1, 256, 64, 64)
         >>> output_tensor = c2psa(input_tensor)
+
+    Notes:
+        This module essentially is the same as PSA module, but refactored to allow stacking more PSABlock modules.
     """
 
     def __init__(self, c1: int, c2: int, n: int = 1, e: float = 0.5):
-        """
-        Initialize C2PSA module.
+        """Initialize C2PSA module.
 
         Args:
             c1 (int): Input channels.
@@ -49,8 +46,7 @@ class C2PSA(nn.Module):
         self.m = nn.Sequential(*(PSABlock(self.c, attn_ratio=0.5, num_heads=self.c // 64) for _ in range(n)))
 
     def forward(self, x: torch.Tensor) -> torch.Tensor:
-        """
-        Process the input tensor through a series of PSA blocks.
+        """Process the input tensor through a series of PSA blocks.
 
         Args:
             x (torch.Tensor): Input tensor.
@@ -67,10 +63,9 @@ class Bottleneck(nn.Module):
     """Standard bottleneck."""
 
     def __init__(
-        self, c1: int, c2: int, shortcut: bool = True, g: int = 1, k: Tuple[int, int] = (3, 3), e: float = 0.5
+        self, c1: int, c2: int, shortcut: bool = True, g: int = 1, k: tuple[int, int] = (3, 3), e: float = 0.5
     ):
-        """
-        Initialize a standard bottleneck module.
+        """Initialize a standard bottleneck module.
 
         Args:
             c1 (int): Input channels.
@@ -91,10 +86,8 @@ class Bottleneck(nn.Module):
         return x + self.cv2(self.cv1(x)) if self.add else self.cv2(self.cv1(x))
 
 
-
 class Conv(nn.Module):
-    """
-    Standard convolution module with batch normalization and activation.
+    """Standard convolution module with batch normalization and activation.
 
     Attributes:
         conv (nn.Conv2d): Convolutional layer.
@@ -106,8 +99,7 @@ class Conv(nn.Module):
     default_act = nn.SiLU()  # default activation
 
     def __init__(self, c1, c2, k=1, s=1, p=None, g=1, d=1, act=True):
-        """
-        Initialize Conv layer with given parameters.
+        """Initialize Conv layer with given parameters.
 
         Args:
             c1 (int): Number of input channels.
@@ -125,8 +117,7 @@ class Conv(nn.Module):
         self.act = self.default_act if act is True else act if isinstance(act, nn.Module) else nn.Identity()
 
     def forward(self, x):
-        """
-        Apply convolution, batch normalization and activation to input tensor.
+        """Apply convolution, batch normalization and activation to input tensor.
 
         Args:
             x (torch.Tensor): Input tensor.
@@ -137,8 +128,7 @@ class Conv(nn.Module):
         return self.act(self.bn(self.conv(x)))
 
     def forward_fuse(self, x):
-        """
-        Apply convolution and activation without batch normalization.
+        """Apply convolution and activation without batch normalization.
 
         Args:
             x (torch.Tensor): Input tensor.
@@ -150,8 +140,7 @@ class Conv(nn.Module):
 
 
 class PSABlock(nn.Module):
-    """
-    PSABlock class implementing a Position-Sensitive Attention block for neural networks.
+    """PSABlock class implementing a Position-Sensitive Attention block for neural networks.
 
     This class encapsulates the functionality for applying multi-head attention and feed-forward neural network layers
     with optional shortcut connections.
@@ -172,8 +161,7 @@ class PSABlock(nn.Module):
     """
 
     def __init__(self, c: int, attn_ratio: float = 0.5, num_heads: int = 4, shortcut: bool = True) -> None:
-        """
-        Initialize the PSABlock.
+        """Initialize the PSABlock.
 
         Args:
             c (int): Input and output channels.
@@ -188,8 +176,7 @@ class PSABlock(nn.Module):
         self.add = shortcut
 
     def forward(self, x: torch.Tensor) -> torch.Tensor:
-        """
-        Execute a forward pass through PSABlock.
+        """Execute a forward pass through PSABlock.
 
         Args:
             x (torch.Tensor): Input tensor.
@@ -203,8 +190,7 @@ class PSABlock(nn.Module):
 
 
 class Attention(nn.Module):
-    """
-    Attention module that performs self-attention on the input tensor.
+    """Attention module that performs self-attention on the input tensor.
 
     Args:
         dim (int): The input tensor dimension.
@@ -222,8 +208,7 @@ class Attention(nn.Module):
     """
 
     def __init__(self, dim: int, num_heads: int = 8, attn_ratio: float = 0.5):
-        """
-        Initialize multi-head attention module.
+        """Initialize multi-head attention module.
 
         Args:
             dim (int): Input dimension.
@@ -242,8 +227,7 @@ class Attention(nn.Module):
         self.pe = Conv(dim, dim, 3, 1, g=dim, act=False)
 
     def forward(self, x: torch.Tensor) -> torch.Tensor:
-        """
-        Forward pass of the Attention module.
+        """Forward pass of the Attention module.
 
         Args:
             x (torch.Tensor): The input tensor.
